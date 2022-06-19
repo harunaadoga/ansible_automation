@@ -1,0 +1,29 @@
+---
+- hosts: 192.168.1.153
+  tasks: 
+    - name: install apache
+      yum:
+        name: httpd
+        state: present
+    - name: starting apache service
+      systemd:
+        name: httpd
+        state: started
+        enabled: true
+    - name: open port 80
+      firewalld:
+        port: 80/tcp
+        state: enabled
+        permanent: yes
+        immediate: yes
+    - name: updating index.html
+      copy:
+        content: "Welcome to my ansible lab"
+        dest: /var/www/html/index.html
+      notify: restart apache
+  handlers:
+    - name: restart apache
+      systemd:
+        name: httpd
+        state: restarted
+ 
