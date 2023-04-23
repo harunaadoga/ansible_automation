@@ -1,5 +1,5 @@
 ---
-- hosts: 192.168.1.153
+- hosts: servers
   tasks: 
     - name: install apache
       yum:
@@ -18,7 +18,7 @@
         immediate: yes
     - name: updating index.html
       copy:
-        content: "Welcome to my ansible lab"
+        content: "Welcome to my ansible lab Server"
         dest: /var/www/html/index.html
       notify: restart apache
   handlers:
