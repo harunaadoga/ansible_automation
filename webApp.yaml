@@ -1,5 +1,5 @@
 ---
-- hosts: servers
+- hosts: webapps
   tasks: 
     - name: install apache
       yum:
@@ -18,7 +18,7 @@
         immediate: yes
     - name: updating index.html
       copy:
-        content: "Welcome to my ansible lab Server"
+        content: "Welcome to the infrastructure automation ansible server"
         dest: /var/www/html/index.html
       notify: restart apache
   handlers:
