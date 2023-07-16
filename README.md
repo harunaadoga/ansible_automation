@@ -1,2 +1,2 @@
-# ansible_projects
-My playbooks
+# ansible_automation
+DevOps infrastructure automation with Ansible. 
