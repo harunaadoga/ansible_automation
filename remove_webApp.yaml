@@ -4,7 +4,7 @@
     - name: install apache
       dnf:
         name: httpd
-        state: present
+        state: absent
     - name: starting apache service
       systemd:
         name: httpd
