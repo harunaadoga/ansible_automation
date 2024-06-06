@@ -1,6 +1,3 @@
-server1
-server2
-server3
 
 [head_node]
 srv001.home.local
@@ -14,28 +11,5 @@ srv004.home.local
 srv002.home.local
 srv003.home.local
 
-[nfshome]
-srv001.home.local
-
-
-[monitor]
-srv003.home.local
-
-[monitor_db]
-srv004.home.local
-
 [webapps]
 srv002.home.local
-srv003.home.local
-
-[loadbalancers]
-srv001.home.local
-
-[backups]
-srv001.home.local
-master
-server1
-server2
-
-[researchstorage]
-server3
