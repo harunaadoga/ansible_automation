@@ -3,10 +3,10 @@
 nfs001.company.local
 
 [compute_nodes]
-srv002.company.local
 timeserver.company.local
-servera.company.local
+srv001.company.local
+srv002.company.local
 
 [login_nodes]
-serverb.company.local
+rhel9gui.company.local
 
