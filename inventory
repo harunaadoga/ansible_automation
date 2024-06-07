@@ -1,15 +1,12 @@
 
-[head_node]
-srv001.home.local
+[storage]
+nfs001.company.local
 
 [compute_nodes]
-srv002.home.local
-srv003.home.local
-srv004.home.local
+srv002.company.local
+timeserver.company.local
+servera.company.local
 
 [login_nodes]
-srv002.home.local
-srv003.home.local
+serverb.company.local
 
-[webapps]
-srv002.home.local
