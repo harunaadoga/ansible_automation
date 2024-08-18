@@ -1,0 +1,10 @@
+---
+- name: Update rocky server
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update installed packages
+      dnf:
+       name: '*'
+       state: latest
+  
