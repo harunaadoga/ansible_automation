@@ -1,0 +1,108 @@
+---
+- name: Install Python and configure Lustre server on RHEL 8
+  hosts: lustre-server
+  become: yes
+  gather_facts: no  # Disable fact gathering to avoid issues with Python interpreter
+
+  tasks:
+    - name: Install required dependencies using raw module
+      raw: dnf install -y wget bzip2 tar gcc make kmod kmod-libs
+      changed_when: false
+
+    - name: Gather facts manually after Python is installed
+      ansible.builtin.setup:
+
+    - name: Add Lustre repository for RHEL 8
+      copy:
+        dest: /etc/yum.repos.d/lustre.repo
+        content: |
+          [lustre-server]
+          name=lustre-server
+          baseurl=https://downloads.whamcloud.com/public/lustre/lustre-2.15.1/el8/server/
+          gpgcheck=0
+          enabled=1
+
+          [lustre-client]
+          name=lustre-client
+          baseurl=https://downloads.whamcloud.com/public/lustre/lustre-2.15.1/el8/client/
+          gpgcheck=0
+          enabled=1
+
+          [lustre-dkms]
+          name=lustre-dkms
+          baseurl=https://downloads.whamcloud.com/public/lustre/lustre-2.15.1/el8/dkms/
+          gpgcheck=0
+          enabled=1
+
+    - name: Clean all dnf metadata
+      raw: dnf clean all
+
+    - name: Install Lustre server packages using raw module
+      raw: dnf install -y lustre lustre-osd-ldiskfs lustre-resource-agents
+      changed_when: false
+
+    - name: Configure static IP on enp0s9
+      nmcli:
+        conn_name: enp0s9
+        ifname: enp0s9
+        type: ethernet
+        ip4: 172.16.1.1/24
+        gw4: 172.16.1.1
+        state: present
+
+    - name: Restart NetworkManager to apply IP configuration
+      systemd:
+        name: NetworkManager
+        state: restarted
+
+    - name: Verify IP configuration
+      command: ip addr show enp0s9
+      register: ip_config
+
+    - debug:
+        var: ip_config.stdout_lines
+
+    - name: Format /dev/sdb as MDT
+      shell: mkfs.lustre --mdt --fsname=lustre --mgs --index=0 /dev/sdb
+
+    - name: Format /dev/sdc as OST
+      shell: mkfs.lustre --ost --fsname=lustre --mgsnode=172.16.1.1@tcp0 --index=0 /dev/sdc
+
+    - name: Create mount points for MDT and OST
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - /mnt/mdt
+        - /mnt/ost
+
+    - name: Mount MDT
+      shell: mount -t lustre /dev/sdb /mnt/mdt
+
+    - name: Mount OST
+      shell: mount -t lustre /dev/sdc /mnt/ost
+
+    - name: Set up LNet configuration file
+      copy:
+        dest: /etc/modprobe.d/lustre.conf
+        content: |
+          options lnet networks=tcp0(enp0s9)
+
+    - name: Load Lustre modules
+      shell: |
+        modprobe lustre
+        modprobe lnet
+
+    - name: Enable and start Lustre service
+      systemd:
+        name: lustre
+        enabled: yes
+        state: started
+
+    - name: Verify Lustre service status
+      shell: systemctl status lustre
+      register: lustre_status
+      ignore_errors: yes
+
+    - debug:
+        var: lustre_status.stdout_lines

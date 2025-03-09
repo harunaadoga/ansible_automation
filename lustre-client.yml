@@ -1,0 +1,79 @@
+---
+- name: Install and configure Lustre client on Rocky Linux 9
+  hosts: lustre_clients
+  become: yes
+  tasks:
+
+    - name: Install EPEL repository
+      dnf:
+        name: epel-release
+        state: present
+
+    - name: Install required dependencies
+      dnf:
+        name:
+          - wget
+          - bzip2
+          - tar
+          - gcc
+          - make
+          - kmod
+          - kmod-libs
+          - kmod-devel
+        state: present
+
+    - name: Download Lustre client packages
+      get_url:
+        url: https://downloads.whamcloud.com/public/lustre/latest-release/el9/client/RPMS/x86_64/lustre-client-*.rpm
+        dest: /tmp/lustre-client.rpm
+
+    - name: Install Lustre client packages
+      dnf:
+        name: /tmp/lustre-client.rpm
+        state: present
+
+    - name: Configure static IP on eth0
+      nmcli:
+        conn_name: eth0
+        ifname: eth0
+        type: ethernet
+        ip4: 172.16.1.2/24
+        gw4: 172.16.1.1
+        state: present
+
+    - name: Restart NetworkManager to apply IP configuration
+      systemd:
+        name: NetworkManager
+        state: restarted
+
+    - name: Verify IP configuration
+      command: ip addr show eth0
+      register: ip_config
+
+    - debug:
+        var: ip_config.stdout_lines
+
+    - name: Load Lustre modules
+      shell: modprobe lustre
+
+    - name: Set up LNet configuration file
+      copy:
+        dest: /etc/modprobe.d/lustre.conf
+        content: |
+          options lnet networks=tcp0(eth0)
+
+    - name: Create Lustre mount point
+      file:
+        path: /mnt/lustre
+        state: directory
+
+    - name: Mount Lustre file system
+      shell: mount -t lustre 172.16.1.1@tcp0:/lustre /mnt/lustre
+
+    - name: Verify Lustre mount
+      shell: df -hT /mnt/lustre
+      register: mount_status
+      ignore_errors: yes
+
+    - debug:
+        var: mount_status.stdout_lines
