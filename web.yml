@@ -1,0 +1,40 @@
+---
+
+- hosts: dev
+  become: true
+  tasks:
+  
+  - name: update RHEL packages
+    dnf:
+      name: '*'
+      state: latest
+    when: ansible_distribution == 'RedHat'
+
+  - name: update all packages 
+    apt:
+      update_cache: yes
+    when: ansible_distribution == 'Ubuntu'
+
+  - name: install apache2
+    apt:
+      name: apache2
+      state: latest
+    when: ansible_distribution == 'Ubuntu'
+
+  - name: start apache2
+    service:
+      name: apache2
+      state: started
+    when: ansible_distribution == 'Ubuntu'
+  - name: install httpd
+    dnf:
+      name: httpd
+      state: latest
+    when: ansible_distribution == 'RedHat'
+
+  - name: start httpd
+    service:
+      name: httpd
+      state: started
+    when: ansible_distribution == 'RedHat'
+  
